@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Github, Disc as Discord, Music, Volume2, VolumeX, MapPin, Instagram, Play, Pause } from "lucide-react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { Github, Linkedin, Music, Volume2, VolumeX, MapPin, Instagram, Play, Pause } from "lucide-react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import lyrics from "./lyrics";
 import cane from "./assets/cana.png"; 
+import musicFile from "./assets/music.mp3";
 
-// Gera um ID único para cada cana
 let caneIdCounter = 0;
 
 interface CaneItem {
@@ -17,10 +18,20 @@ interface CaneItem {
 
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [chuva, setChuva] = useState<CaneItem[]>([]);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
 
-  const MUSIC_URL = "SUA_URL_DA_MUSICA_AQUI.mp3";
+  const MUSIC_URL = musicFile;
+
+  // Formata segundos em mm:ss
+  const formatTime = (t: number) => {
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   const toggleAudio = () => {
     if (audioRef.current) {
@@ -33,7 +44,35 @@ export default function App() {
     }
   };
 
-  // Spawn contínuo de canas por todo o ecrã
+  // Seek — clicar na barra para pular
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !progressRef.current) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audioRef.current.currentTime = pct * duration;
+  };
+
+  // Atualizar progresso em tempo real
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onLoadedMetadata = () => setDuration(audio.duration);
+    const onEnded = () => setIsPlaying(false);
+
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("ended", onEnded);
+
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("ended", onEnded);
+    };
+  }, []);
+
+
   const spawnCane = useCallback(() => {
     const screenW = typeof window !== "undefined" ? window.innerWidth : 1000;
     const newCane: CaneItem = {
@@ -47,14 +86,14 @@ export default function App() {
     setChuva((prev) => [...prev, newCane]);
   }, []);
 
-  // Remover canas que já caíram (limpeza de memória)
+
   const removeCane = useCallback((id: number) => {
     setChuva((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
-  // Spawn contínuo — 3 canas por segundo
+
   useEffect(() => {
-    // Spawn inicial de várias canas para encher o ecrã
+
     const initialBurst = Array.from({ length: 12 }, () => {
       const screenW = typeof window !== "undefined" ? window.innerWidth : 1000;
       return {
@@ -76,14 +115,28 @@ export default function App() {
   }, [spawnCane]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden bg-black text-white font-sans">
+    <div className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-950 via-black to-gray-950 text-white font-sans">
       
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px]" />
-        <div className="absolute inset-0 bg-[url('https://sua-imagem-de-fundo.jpg')] bg-cover bg-center opacity-30" />
+        {/* Gradiente de base */}
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-950/30 via-transparent to-black" />
+        {/* Orb roxa central */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/15 rounded-full blur-[150px]" />
+        {/* Orb azul subtil à esquerda */}
+        <div className="absolute top-2/3 left-1/4 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[130px]" />
+        {/* Orb fuchsia subtil à direita */}
+        <div className="absolute top-1/4 right-1/4 w-[350px] h-[350px] bg-fuchsia-600/10 rounded-full blur-[120px]" />
+        {/* Noise texture overlay */}
+        <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIGZpbHRlcj0idXJsKCNhKSIgb3BhY2l0eT0iMSIvPjwvc3ZnPg==')]" />
       </div>
 
-      {/* --- CHUVA DE CANAS POR TODO O ECRÃ --- */}
+      <button
+        onClick={toggleAudio}
+        className="fixed top-5 left-5 z-50 w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center hover:bg-white/20 transition-all"
+      >
+        {isPlaying ? <Volume2 size={22} /> : <VolumeX size={22} className="text-gray-400" />}
+      </button>
+
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <AnimatePresence>
           {chuva.map((item) => (
@@ -105,54 +158,61 @@ export default function App() {
           />
         </motion.div>
 
-        <h1 className="text-4xl font-bold tracking-tighter drop-shadow-lg mb-2">
-          canasdev<span className="text-purple-400">_</span>
+        <h1 className="text-4xl font-bold tracking-tighter drop-shadow-lg mb-1">
+          David Guerreiro
         </h1>
+        <p className="text-sm text-gray-500 tracking-wide mb-3">@canasdev</p>
         
-        <p className="text-gray-300 italic mb-4 px-4 leading-relaxed">
-          Universidade de Aveiro | Engenharia de Computadores e Informática
+        <p className="text-xs tracking-wide text-gray-400 mb-2 px-4">
+          Universidade de Aveiro <span className="text-purple-400/50 mx-1">|</span> Engenharia de Computadores e Informática
         </p>
 
-        {/* LOCALIZAÇÃO */}
-        <div className="flex items-center gap-1 text-sm text-gray-400 mb-8">
-          <MapPin size={14} />
-          <span>Aveiro, Portugal</span>
+        <div className="flex items-center gap-1 text-xs text-gray-600 mb-8">
+          <MapPin size={11} />
+          <span>Portugal</span>
         </div>
 
-        {/* SOCIAL BADGES */}
         <div className="flex gap-4 mb-10">
-          <SocialIcon href="https://discord.com" icon={<Discord size={28} />} color="hover:text-indigo-400" />
-          <SocialIcon href="https://spotify.com" icon={<Music size={28} />} color="hover:text-green-400" />
-          <SocialIcon href="https://instagram.com" icon={<Instagram size={28} />} color="hover:text-pink-400" />
+          <SocialIcon href="https://www.linkedin.com/in/canasdev/" icon={<Linkedin size={28} />} color="hover:text-blue-400" />
           <SocialIcon href="https://github.com/davidcanas" icon={<Github size={28} />} color="hover:text-gray-400" />
+          <SocialIcon href="https://instagram.com/davidguerrreiro" icon={<Instagram size={28} />} color="hover:text-pink-400" />
         </div>
+
+        {/* LYRICS SINCRONIZADAS */}
+        <SyncedLyrics currentTime={currentTime} isPlaying={isPlaying} />
 
         {/* PLAYER DE MÚSICA — MODERNO COM PLAY/PAUSE */}
         <div className="w-full bg-white/5 border border-white/10 backdrop-blur-2xl rounded-2xl p-5 flex items-center gap-4 shadow-2xl">
           {/* Cover art com animação */}
           <motion.div 
-            className="w-14 h-14 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30 flex-shrink-0"
+            className="w-14 h-14 rounded-xl overflow-hidden shadow-lg shadow-purple-500/30 flex-shrink-0"
             animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
             transition={isPlaying ? { duration: 4, repeat: Infinity, ease: "linear" } : { duration: 0.3 }}
           >
-            <Music size={24} />
+            <img src="https://i1.sndcdn.com/artworks-hNOv66ebxWa9-0-t500x500.jpg" alt="Cover" className="w-full h-full object-cover" />
           </motion.div>
 
           {/* Info da música */}
           <div className="flex-1 text-left min-w-0">
-            <p className="text-sm font-bold truncate">Nome da Música</p>
-            <p className="text-xs text-gray-400 truncate">Artista - Álbum</p>
-            {/* Barra de progresso visual */}
-            <div className="w-full h-1 bg-white/10 rounded-full mt-2.5 overflow-hidden">
-              {isPlaying ? (
-                <motion.div 
-                  animate={{ x: ["-100%", "100%"] }} 
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="w-full h-full bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-full" 
-                />
-              ) : (
-                <div className="w-1/3 h-full bg-white/20 rounded-full" />
-              )}
+            <p className="text-sm font-bold truncate">DIE FOR ME</p>
+            <p className="text-xs text-gray-400 truncate">Chase Atlantic</p>
+            {/* Barra de progresso clicável */}
+            <div 
+              ref={progressRef}
+              onClick={handleSeek}
+              className="w-full h-1.5 bg-white/10 rounded-full mt-2.5 cursor-pointer group relative"
+            >
+              <div 
+                className="h-full bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-full transition-all duration-150 relative"
+                style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : "0%" }}
+              >
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+            {/* Timestamps */}
+            <div className="flex justify-between mt-1">
+              <span className="text-[10px] text-gray-500">{formatTime(currentTime)}</span>
+              <span className="text-[10px] text-gray-500">{formatTime(duration)}</span>
             </div>
           </div>
 
@@ -213,6 +273,67 @@ export default function App() {
 }
 
 // Componentes Auxiliares
+
+function SyncedLyrics({ currentTime, isPlaying }: { currentTime: number; isPlaying: boolean }) {
+  const currentIndex = useMemo(() => {
+    let idx = -1;
+    for (let i = lyrics.length - 1; i >= 0; i--) {
+      if (currentTime >= lyrics[i].time) {
+        idx = i;
+        break;
+      }
+    }
+    return idx;
+  }, [currentTime]);
+
+  const currentLine = currentIndex >= 0 ? lyrics[currentIndex]?.text : "";
+
+  if ((!isPlaying && currentTime === 0) || !currentLine) {
+    return <div className="h-14 mb-4" />;
+  }
+
+  return (
+    <div className="w-full mb-4 flex flex-col items-center justify-center h-14 relative">
+      {/* Glow subtil atrás do texto */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-48 h-8 bg-purple-500/8 rounded-full blur-2xl" />
+      </div>
+
+      {/* Linha decorativa esquerda + direita */}
+      <div className="flex items-center gap-3 w-full max-w-sm">
+        <motion.div
+          key={`line-l-${currentIndex}`}
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 0.15 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="flex-1 h-px bg-gradient-to-r from-transparent to-purple-400 origin-left"
+        />
+
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={currentIndex}
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="text-[13px] font-light tracking-wider text-center shrink-0 max-w-[75%] bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent"
+          >
+            {currentLine}
+          </motion.p>
+        </AnimatePresence>
+
+        <motion.div
+          key={`line-r-${currentIndex}`}
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 0.15 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="flex-1 h-px bg-gradient-to-l from-transparent to-purple-400 origin-right"
+        />
+      </div>
+    </div>
+  );
+}
+
 function SocialIcon({ href, icon, color }: { href: string, icon: any, color: string }) {
   return (
     <a 
