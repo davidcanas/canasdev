@@ -6,6 +6,8 @@ export interface LyricLine {
 }
 
 const lyrics: LyricLine[] = [
+  { time: 1.00, text: "ホントは私気付いてたんです" },
+  { time: 5.00, text: "あなたが私を見ていてくれたこと" },
   { time: 13.86, text: "Alright, alright, whoa" },
   { time: 16.56, text: "Why you pointing at me with that knife?" },
   { time: 19.63, text: "I've been cutting corners all my life, girl" },
