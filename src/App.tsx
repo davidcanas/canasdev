@@ -26,7 +26,6 @@ export default function App() {
 
   const MUSIC_URL = musicFile;
 
-  // Formata segundos em mm:ss
   const formatTime = (t: number) => {
     const m = Math.floor(t / 60);
     const s = Math.floor(t % 60);
@@ -44,7 +43,6 @@ export default function App() {
     }
   };
 
-  // Seek — clicar na barra para pular
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!audioRef.current || !progressRef.current) return;
     const rect = progressRef.current.getBoundingClientRect();
@@ -52,7 +50,6 @@ export default function App() {
     audioRef.current.currentTime = pct * duration;
   };
 
-  // Atualizar progresso em tempo real
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -118,13 +115,12 @@ export default function App() {
     <div className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-950 via-black to-gray-950 text-white font-sans">
       
       <div className="absolute inset-0 -z-10">
-        {/* Gradiente de base */}
+        
         <div className="absolute inset-0 bg-gradient-to-b from-purple-950/30 via-transparent to-black" />
-        {/* Orb roxa central */}
+        
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/15 rounded-full blur-[150px]" />
-        {/* Orb azul subtil à esquerda */}
+        
         <div className="absolute top-2/3 left-1/4 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[130px]" />
-        {/* Orb fuchsia subtil à direita */}
         <div className="absolute top-1/4 right-1/4 w-[350px] h-[350px] bg-fuchsia-600/10 rounded-full blur-[120px]" />
         {/* Noise texture overlay */}
         <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIGZpbHRlcj0idXJsKCNhKSIgb3BhY2l0eT0iMSIvPjwvc3ZnPg==')]" />
@@ -181,20 +177,19 @@ export default function App() {
         {/* LYRICS SINCRONIZADAS */}
         <SyncedLyrics currentTime={currentTime} isPlaying={isPlaying} />
 
-        {/* PLAYER DE MÚSICA — MODERNO COM PLAY/PAUSE */}
         <div className="w-full bg-white/5 border border-white/10 backdrop-blur-2xl rounded-2xl p-5 flex items-center gap-4 shadow-2xl">
-          {/* Cover art com animação */}
+    
           <motion.div 
             className="w-14 h-14 rounded-xl overflow-hidden shadow-lg shadow-purple-500/30 flex-shrink-0"
             animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
             transition={isPlaying ? { duration: 4, repeat: Infinity, ease: "linear" } : { duration: 0.3 }}
           >
-            <img src="https://i1.sndcdn.com/artworks-hNOv66ebxWa9-0-t500x500.jpg" alt="Cover" className="w-full h-full object-cover" />
+            <img src="https://images.genius.com/6c9ec324f88156c98b571bcc46549fef.378x378x1.jpg" alt="Cover" className="w-full h-full object-cover" />
           </motion.div>
 
           {/* Info da música */}
           <div className="flex-1 text-left min-w-0">
-            <p className="text-sm font-bold truncate">DIE FOR ME</p>
+            <p className="text-sm font-bold truncate">Consume</p>
             <p className="text-xs text-gray-400 truncate">Chase Atlantic</p>
             {/* Barra de progresso clicável */}
             <div 
@@ -258,7 +253,7 @@ export default function App() {
         </div>
       </main>
 
-      {/* Cana rotativa decorativa no canto */}
+      
       <motion.img
         src={cane}
         className="fixed bottom-10 right-10 w-12 h-12 z-50 pointer-events-none opacity-60"
@@ -266,13 +261,11 @@ export default function App() {
         transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
       />
 
-      {/* Áudio invisível */}
+    
       <audio ref={audioRef} src={MUSIC_URL} loop />
     </div>
   );
 }
-
-// Componentes Auxiliares
 
 function SyncedLyrics({ currentTime, isPlaying }: { currentTime: number; isPlaying: boolean }) {
   const currentIndex = useMemo(() => {
